@@ -1,34 +1,46 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
 const mysql = require('mysql');
+const cors = require('cors');
+const bodyParser = require('body-parser');
 
 const app = express();
-const port = 3000;
-
-app.use(bodyParser.json());
 app.use(cors());
+app.use(bodyParser.json());
 
 const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '0000', // 여기서 비밀번호를 실제 비밀번호로 바꿉니다.
-  database: 'calendar_db'
+  password: '0000', // 실제 비밀번호로 변경하세요
+  database: 'calendar_db' // 실제 데이터베이스 이름으로 변경하세요
 });
 
 connection.connect((err) => {
-  if (err) {
-    console.error('error connecting: ' + err.stack);
-    return;
-  }
-  console.log('connected as id ' + connection.threadId);
+  if (err) throw err;
+  console.log('Connected to MySQL Database.');
+});
+
+app.post('/register', (req, res) => {
+  const { username, name, email, password } = req.body;
+  const checkUserQuery = 'SELECT * FROM users WHERE username = ?';
+  connection.query(checkUserQuery, [username], (err, results) => {
+    if (err) throw err;
+    if (results.length > 0) {
+      res.json({ success: false, message: '이미 등록된 회원입니다.' });
+    } else {
+      const insertUserQuery = 'INSERT INTO users (username, name, email, password) VALUES (?, ?, ?, ?)';
+      connection.query(insertUserQuery, [username, name, email, password], (err, results) => {
+        if (err) throw err;
+        res.json({ success: true });
+      });
+    }
+  });
 });
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   const query = 'SELECT * FROM users WHERE username = ? AND password = ?';
-  connection.query(query, [username, password], (error, results) => {
-    if (error) throw error;
+  connection.query(query, [username, password], (err, results) => {
+    if (err) throw err;
     if (results.length > 0) {
       res.json({ success: true });
     } else {
@@ -37,23 +49,6 @@ app.post('/login', (req, res) => {
   });
 });
 
-app.post('/register', (req, res) => {
-  const { username, password, name, email } = req.body;
-  const checkQuery = 'SELECT * FROM users WHERE email = ?';
-  connection.query(checkQuery, [email], (checkError, checkResults) => {
-    if (checkError) throw checkError;
-    if (checkResults.length > 0) {
-      res.json({ success: false, message: '이미 등록된 회원정보입니다.' });
-    } else {
-      const insertQuery = 'INSERT INTO users (username, password, name, email) VALUES (?, ?, ?, ?)';
-      connection.query(insertQuery, [username, password, name, email], (insertError, insertResults) => {
-        if (insertError) throw insertError;
-        res.json({ success: true, message: '회원가입되었습니다.' });
-      });
-    }
-  });
-});
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+app.listen(3000, () => {
+  console.log('Server running on port 3000');
 });
