@@ -42,7 +42,7 @@ app.post('/login', (req, res) => {
   connection.query(query, [username, password], (err, results) => {
     if (err) throw err;
     if (results.length > 0) {
-      res.json({ success: true, user: results[0] });
+      res.json({ success: true });
     } else {
       res.json({ success: false });
     }
@@ -51,7 +51,7 @@ app.post('/login', (req, res) => {
 
 app.get('/user/:username', (req, res) => {
   const { username } = req.params;
-  const query = 'SELECT username, name, email FROM users WHERE username = ?';
+  const query = 'SELECT username, email, name FROM users WHERE username = ?';
   connection.query(query, [username], (err, results) => {
     if (err) throw err;
     if (results.length > 0) {
@@ -64,9 +64,9 @@ app.get('/user/:username', (req, res) => {
 
 app.put('/user/:username', (req, res) => {
   const { username } = req.params;
-  const { name, email, password } = req.body;
-  const query = 'UPDATE users SET name = ?, email = ?, password = ? WHERE username = ?';
-  connection.query(query, [name, email, password, username], (err, results) => {
+  const { email, name, password } = req.body;
+  const query = 'UPDATE users SET email = ?, name = ?, password = ? WHERE username = ?';
+  connection.query(query, [email, name, password, username], (err, results) => {
     if (err) throw err;
     res.json({ success: true });
   });
@@ -81,7 +81,6 @@ app.delete('/user/:username', (req, res) => {
   });
 });
 
-const PORT = 3000; // 포트를 3000로 변경
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(3000, () => {
+  console.log('Server running on port 3000');
 });
