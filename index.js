@@ -19,79 +19,38 @@ connection.connect((err) => {
   console.log('Connected to MySQL Database.');
 });
 
-app.post('/register', (req, res) => {
-  const { username, name, email, password } = req.body;
-  const checkUserQuery = 'SELECT * FROM users WHERE username = ?';
-  connection.query(checkUserQuery, [username], (err, results) => {
+// 사용자 정보 가져오기
+app.get('/user/:username', (req, res) => {
+  const { username } = req.params;
+  const query = 'SELECT * FROM users WHERE username = ?';
+  connection.query(query, [username], (err, results) => {
     if (err) throw err;
     if (results.length > 0) {
-      res.json({ success: false, message: '이미 등록된 회원입니다.' });
+      res.json({ success: true, user: results[0] });
     } else {
-      const insertUserQuery = 'INSERT INTO users (username, name, email, password) VALUES (?, ?, ?, ?)';
-      connection.query(insertUserQuery, [username, name, email, password], (err, results) => {
-        if (err) throw err;
-        res.json({ success: true });
-      });
+      res.json({ success: false, message: 'User not found' });
     }
   });
 });
 
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  const query = 'SELECT * FROM users WHERE username = ? AND password = ?';
-  connection.query(query, [username, password], (err, results) => {
-    if (err) throw err;
-    if (results.length > 0) {
-      res.json({ success: true, username }); // username 반환
-    } else {
-      res.json({ success: false });
-    }
-  });
-});
-
-app.post('/events', (req, res) => {
-  const { username, title, start, end, allDay } = req.body;
-
-  if (!username) {
-    return res.status(400).json({ success: false, message: 'Username is required' });
-  }
-
-  const formatDate = (date) => {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = ('0' + (d.getMonth() + 1)).slice(-2);
-    const day = ('0' + d.getDate()).slice(-2);
-    const hours = ('0' + d.getHours()).slice(-2);
-    const minutes = ('0' + d.getMinutes()).slice(-2);
-    const seconds = ('0' + d.getSeconds()).slice(-2);
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  };
-
-  const formattedStart = formatDate(start);
-  const formattedEnd = formatDate(end);
-
-  const insertEventQuery = 'INSERT INTO events (username, title, start, end, allDay) VALUES (?, ?, ?, ?, ?)';
-  connection.query(insertEventQuery, [username, title, formattedStart, formattedEnd, allDay], (err, results) => {
+// 사용자 정보 업데이트
+app.put('/user/:username', (req, res) => {
+  const { username } = req.params;
+  const { email, name, password } = req.body;
+  const query = 'UPDATE users SET email = ?, name = ?, password = ? WHERE username = ?';
+  connection.query(query, [email, name, password, username], (err, results) => {
     if (err) throw err;
     res.json({ success: true });
   });
 });
 
-app.delete('/events/:id', (req, res) => {
-  const eventId = req.params.id;
-  const deleteEventQuery = 'DELETE FROM events WHERE id = ?';
-  connection.query(deleteEventQuery, [eventId], (err, results) => {
+// 사용자 삭제
+app.delete('/user/:username', (req, res) => {
+  const { username } = req.params;
+  const query = 'DELETE FROM users WHERE username = ?';
+  connection.query(query, [username], (err, results) => {
     if (err) throw err;
     res.json({ success: true });
-  });
-});
-
-app.get('/events/:username', (req, res) => {
-  const username = req.params.username;
-  const getEventsQuery = 'SELECT * FROM events WHERE username = ?';
-  connection.query(getEventsQuery, [username], (err, results) => {
-    if (err) throw err;
-    res.json({ success: true, events: results });
   });
 });
 
