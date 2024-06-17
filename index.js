@@ -10,7 +10,7 @@ app.use(bodyParser.json());
 const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '0000', // 실제 비밀번호로 변경하세요
+  password: 'rjsgml0420', // 실제 비밀번호로 변경하세요
   database: 'calendar_db' // 실제 데이터베이스 이름으로 변경하세요
 });
 
@@ -42,12 +42,13 @@ app.post('/login', (req, res) => {
   connection.query(query, [username, password], (err, results) => {
     if (err) throw err;
     if (results.length > 0) {
-      res.json({ success: true, userId: results[0].id });
+      res.json({ success: true, userId: results[0].id }); // userId 반환
     } else {
       res.json({ success: false });
     }
   });
 });
+
 
 // 새로운 이벤트 저장 엔드포인트 추가
 app.post('/events', (req, res) => {
